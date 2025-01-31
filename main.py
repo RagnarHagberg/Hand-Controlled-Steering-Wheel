@@ -83,13 +83,15 @@ def main():
 
             detector.draw_steering_wheel(frame, closed_fist)
 
+            # Flip Screen
+            frame = cv2.flip(frame, 1)
+
             # Display fps on screen
             ctime = time.time()
             fps = 1 / (ctime - ptime)
             ptime = ctime
             cv2.putText(frame, str(int(fps)), (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
 
-            # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             cv2.imshow('frame', frame)
             cv2.waitKey(1)
 
