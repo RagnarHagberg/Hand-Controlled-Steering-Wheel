@@ -1,6 +1,7 @@
 import mediapipe as mp
 import math as math
 import cv2
+from math import dist
 
 class HandTracker:
     def __init__(self, mode=False, max_hands=2, detection_confidence=0.5, tracking_confidence=0.5):
@@ -131,9 +132,48 @@ class HandTracker:
         step = 0.1
         target = math.pi / 2
 
+
         if self.steering_wheel_angle < target:
             self.steering_wheel_angle = min(self.steering_wheel_angle + step, target)
         else:
             self.steering_wheel_angle = max(self.steering_wheel_angle - step, target)
 
         self.previous_hand_angle = None
+
+    def get_landmark_x_coordinate(self, landmark):  # landmark --> out of 21
+        return float(str(self.results.multi_hand_landmarks[-1].landmark[int(landmark)]).split('\n')[0].split(" ")[1])
+    def get_landmark_y_coordinate(self,landmark):  # landmark --> out of 21
+        return float(str(self.results.multi_hand_landmarks[-1].landmark[int(landmark)]).split('\n')[1].split(" ")[1])
+
+    def is_finger_closed(self, tip_landmark):
+        '''
+        The finger is closed if the tip of the finger is closer to the palm than the middle
+        '''
+
+        palm_x = self.get_landmark_x_coordinate(0)  # coordinates of landmark 0
+        palm_y = self.get_landmark_y_coordinate(0)
+
+        top_x = self.get_landmark_x_coordinate(tip_landmark)
+        top_y = self.get_landmark_y_coordinate(tip_landmark)
+
+        middle_x = self.get_landmark_x_coordinate(tip_landmark-1)
+        middle_y = self.get_landmark_y_coordinate(tip_landmark-1)
+
+        distance_top_to_palm = dist([palm_x, palm_y], [top_x, top_y])
+        distance_middle_to_palm = dist([palm_x, palm_y], [middle_x, middle_y])
+
+        if distance_top_to_palm < distance_middle_to_palm:
+            return True
+
+    def get_closed_fingers(self):  # is z="finger, it retuens which finger is closed. If z="true coordinate", it returns the true coordinates
+        if not self.results.multi_hand_landmarks:
+            return []
+
+        closed_fingers = []
+
+        tip_ids_to_check_for = self.tip_ids[1:]
+        for landmark_index in tip_ids_to_check_for:
+            closed_fingers.append(self.is_finger_closed(landmark_index))
+
+        return closed_fingers
+

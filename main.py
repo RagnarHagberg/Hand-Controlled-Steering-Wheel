@@ -44,19 +44,30 @@ def main():
     gesture_tracker = GestureTracker.GestureTracker(get_gesture_recognizer_result, MODEL_PATH)
     options = gesture_tracker.create_options()
 
+    use_gesture_recognizer = False
+
     with GestureRecognizer.create_from_options(options) as recognizer:
         while True:
             ret, frame = cap.read()
 
             # Do gesture recognition first
             # Convert stream to image type for gesture recognizer
-            timestamp_ms = int(time.time() * 1000)
-            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
 
-            recognizer.recognize_async(mp_image, timestamp_ms)
+            if use_gesture_recognizer:
+                timestamp_ms = int(time.time() * 1000)
+                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
+
+                recognizer.recognize_async(mp_image, timestamp_ms)
 
             # Find fingers for next operations
-            frame = detector.process_frame(frame)
+            frame = detector.process_frame(frame, False)
+            if not use_gesture_recognizer:
+                true_fingers = [True for x in detector.get_closed_fingers() if x]
+                if len(true_fingers) > 2:
+                    closed_fist = True
+                else:
+                    closed_fist = False
+
             detector.draw_steering_wheel(frame, closed_fist)
 
             # Display fps on screen
