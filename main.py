@@ -11,6 +11,8 @@ GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
 MODEL_PATH = r"Models\gesture_recognizer.task"
 
 closed_fist = False
+time_when_fist_closed = 0
+fist_release_delay = 0.5
 
 
 # Gets result from the GestureRecognizer with live stream mode
@@ -27,7 +29,7 @@ def get_gesture_recognizer_result(result: GestureRecognizerResult, output_image:
 
 
 def main():
-    global closed_fist
+    global closed_fist, time_when_fist_closed
 
     ptime = 0
 
@@ -45,16 +47,23 @@ def main():
     options = gesture_tracker.create_options()
 
     use_gesture_recognizer = False
+    frame_counter = 0
+    gesture_recognition_interval = 3  # Run every 3 frames
 
     with GestureRecognizer.create_from_options(options) as recognizer:
         while True:
             ret, frame = cap.read()
 
-            # Do gesture recognition first
-            # Convert stream to image type for gesture recognizer
+            if not ret:
+                continue
 
-            if use_gesture_recognizer:
+            frame_counter += 1
+
+            # Do gesture recognition before other alterations of the frame
+            # Run gesture recognition every 3 frames to reduce computation
+            if use_gesture_recognizer and frame_counter % gesture_recognition_interval == 0:
                 timestamp_ms = int(time.time() * 1000)
+                # Convert stream to image type for gesture recognizer
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
 
                 recognizer.recognize_async(mp_image, timestamp_ms)
@@ -63,10 +72,14 @@ def main():
             frame = detector.process_frame(frame, False)
             if not use_gesture_recognizer:
                 true_fingers = [True for x in detector.get_closed_fingers() if x]
-                if len(true_fingers) > 2:
+                detected_fist = len(true_fingers) > 2 # More than 2 fingers closed means a fist
+
+                if detected_fist:
                     closed_fist = True
+                    time_when_fist_closed = time.time() # Start tracking the time the fist was closed
                 else:
-                    closed_fist = False
+                    if closed_fist and (time.time() - time_when_fist_closed >= fist_release_delay):
+                        closed_fist = False
 
             detector.draw_steering_wheel(frame, closed_fist)
 

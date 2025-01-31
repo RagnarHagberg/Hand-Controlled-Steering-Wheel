@@ -1,3 +1,5 @@
+import time
+
 import mediapipe as mp
 import math as math
 import cv2
@@ -27,6 +29,12 @@ class HandTracker:
         self.steering_wheel_angle = math.pi / 2  # Default upright position
         self.previous_hand_angle = None
 
+        # For stabilization
+        self.previous_hand_position = None
+        self.tracked_hand_id = -1
+        self.last_seen_hand_time = 0
+        self.hand_timeout = 2.0
+
     def process_frame(self, frame, draw=True):
         '''
         Detects hands and landmarks in a frame.
@@ -40,51 +48,89 @@ class HandTracker:
                 if draw:
                     self.mp_draw.draw_landmarks(frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
 
+
         return frame
 
     def get_hand_position(self, frame, hand_no=0, draw=True):
         '''
         Finds the position of hand landmarks in the frame.
         '''
+
+        if not self.results.multi_hand_landmarks:
+            if time.time() - self.last_seen_hand_time > self.hand_timeout:
+                self.tracked_hand_id = -1
+                return
+            else:
+                return None, None, None
+
+        min_movement = float('inf')
+
+        # Check for most likely hand
+        for i, hand_landmarks in enumerate(self.results.multi_hand_landmarks):
+            # Compute hand center (average of all landmark positions)
+            hand_x = sum(lm.x for lm in hand_landmarks.landmark) / len(hand_landmarks.landmark)
+            hand_y = sum(lm.y for lm in hand_landmarks.landmark) / len(hand_landmarks.landmark)
+            current_hand_position = (hand_x, hand_y)
+
+            # Compare movement against the last known hand position
+            if self.previous_hand_position is not None:
+                movement = math.dist(current_hand_position, self.previous_hand_position)  # Euclidean distance
+            else:
+                 # select zeroth hand
+                movement = 0  # First frame, no previous position
+
+            if movement < min_movement:
+                min_movement = movement
+                best_hand_index = i
+
+        self.tracked_hand_id = best_hand_index
+        self.last_seen_hand_time = time.time()
+        my_hand = self.results.multi_hand_landmarks[self.tracked_hand_id]
+
+        self.previous_hand_position = (
+                sum(lm.x for lm in self.results.multi_hand_landmarks[best_hand_index].landmark) / len(
+                    self.results.multi_hand_landmarks[best_hand_index].landmark),
+                sum(lm.y for lm in self.results.multi_hand_landmarks[best_hand_index].landmark) / len(
+                    self.results.multi_hand_landmarks[best_hand_index].landmark),
+            )
+
         x_list, y_list, landmarks_list = [], [], []
-        bounding_box = []
-        hand_center = (0, 0)
 
-        if self.results.multi_hand_landmarks:
-            if hand_no >= len(self.results.multi_hand_landmarks):
-                return None, None, None  # Return None if requested hand is not found
-
-            my_hand = self.results.multi_hand_landmarks[hand_no]
-
-            for idx, landmark in enumerate(my_hand.landmark):
-                h, w, _ = frame.shape
-                cx, cy = int(landmark.x * w), int(landmark.y * h)
-                x_list.append(cx)
-                y_list.append(cy)
-                landmarks_list.append((idx, cx, cy))
-
-                if draw:
-                    cv2.circle(frame, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
-
-            # Bounding box around hand
-            xmin, xmax = min(x_list), max(x_list)
-            ymin, ymax = min(y_list), max(y_list)
-            bounding_box = (xmin, ymin, xmax, ymax)
-            hand_center = ((xmin + xmax) // 2, (ymin + ymax) // 2)
+        for idx, landmark in enumerate(my_hand.landmark):
+            h, w, _ = frame.shape
+            cx, cy = int(landmark.x * w), int(landmark.y * h)
+            x_list.append(cx)
+            y_list.append(cy)
+            landmarks_list.append((idx, cx, cy))
 
             if draw:
-                cv2.rectangle(frame, (xmin - 20, ymin - 20), (xmax + 20, ymax + 20), (0, 255, 0), 2)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
+
+        # Bounding box around hand
+        xmin, xmax = min(x_list), max(x_list)
+        ymin, ymax = min(y_list), max(y_list)
+        bounding_box = (xmin, ymin, xmax, ymax)
+        hand_center = ((xmin + xmax) // 2, (ymin + ymax) // 2)
+
+        if draw:
+            cv2.rectangle(frame, (xmin - 20, ymin - 20), (xmax + 20, ymax + 20), (0, 255, 0), 2)
 
         return landmarks_list, bounding_box, hand_center
 
     def draw_steering_wheel(self, frame, move_steering_wheel=True):
         distance_to_center = None
 
+        # print(self.steering_wheel_angle)
         if self.results.multi_hand_landmarks and move_steering_wheel:
             angle_to_center, distance_to_center = self.get_hand_angle(frame)
 
             if self.previous_hand_angle is not None:
-                self.steering_wheel_angle -= self.previous_hand_angle - angle_to_center
+                # Ignore unreasonably big changes
+                dif = min(0.5,self.previous_hand_angle - angle_to_center)
+                dif = max(-0.5, dif)
+
+                print(dif)
+                self.steering_wheel_angle -= dif
 
             self.previous_hand_angle = angle_to_center
         else:
@@ -132,7 +178,6 @@ class HandTracker:
         step = 0.1
         target = math.pi / 2
 
-
         if self.steering_wheel_angle < target:
             self.steering_wheel_angle = min(self.steering_wheel_angle + step, target)
         else:
@@ -141,9 +186,13 @@ class HandTracker:
         self.previous_hand_angle = None
 
     def get_landmark_x_coordinate(self, landmark):  # landmark --> out of 21
-        return float(str(self.results.multi_hand_landmarks[-1].landmark[int(landmark)]).split('\n')[0].split(" ")[1])
+        if len(self.results.multi_hand_landmarks) - 1 >= self.tracked_hand_id:
+            return float(str(self.results.multi_hand_landmarks[self.tracked_hand_id].landmark[int(landmark)]).split('\n')[0].split(" ")[1])
+
     def get_landmark_y_coordinate(self,landmark):  # landmark --> out of 21
-        return float(str(self.results.multi_hand_landmarks[-1].landmark[int(landmark)]).split('\n')[1].split(" ")[1])
+        if len(self.results.multi_hand_landmarks) - 1 >= self.tracked_hand_id:
+            return float(str(self.results.multi_hand_landmarks[self.tracked_hand_id].landmark[int(landmark)]).split('\n')[1].split(" ")[1])
+
 
     def is_finger_closed(self, tip_landmark):
         '''
@@ -158,6 +207,9 @@ class HandTracker:
 
         middle_x = self.get_landmark_x_coordinate(tip_landmark-1)
         middle_y = self.get_landmark_y_coordinate(tip_landmark-1)
+
+        if not (palm_x and palm_y and top_x and top_y and middle_x and middle_y):
+            return False
 
         distance_top_to_palm = dist([palm_x, palm_y], [top_x, top_y])
         distance_middle_to_palm = dist([palm_x, palm_y], [middle_x, middle_y])
