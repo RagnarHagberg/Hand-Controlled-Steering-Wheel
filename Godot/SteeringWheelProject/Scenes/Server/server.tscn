@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://bokunn06g5fvg"]
+
+[ext_resource type="Script" path="res://Scenes/Server/server.gd" id="1_s4j6p"]
+
+[node name="Server" type="Node"]
+script = ExtResource("1_s4j6p")
+
+[node name="debug" type="RichTextLabel" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Button" type="Button" parent="."]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

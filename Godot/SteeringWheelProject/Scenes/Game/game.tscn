@@ -1,0 +1,60 @@
+[gd_scene load_steps=9 format=3 uid="uid://dtfg3dt33sfu8"]
+
+[ext_resource type="Script" path="res://Scenes/Game/game.gd" id="1_43j5s"]
+[ext_resource type="Texture2D" uid="uid://l7yc31j7h5x2" path="res://Assets/WheelEmblem.png" id="2_el3dv"]
+[ext_resource type="PackedScene" uid="uid://bokunn06g5fvg" path="res://Scenes/Server/server.tscn" id="3_p7hey"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_t1q3g"]
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_67cq3"]
+albedo_color = Color(0.47788, 0.47788, 0.47788, 1)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_naqoy"]
+sky_top_color = Color(0, 0.675374, 0.990879, 1)
+sky_horizon_color = Color(0.780905, 0.616012, 0.511378, 1)
+
+[sub_resource type="Sky" id="Sky_s2hsy"]
+sky_material = SubResource("ProceduralSkyMaterial_naqoy")
+
+[sub_resource type="Environment" id="Environment_fqut8"]
+background_mode = 2
+sky = SubResource("Sky_s2hsy")
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_43j5s")
+
+[node name="Ground" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.377869, 0.00119746, 0.177573)
+size = Vector3(7.83118, 0.375488, 2.40039)
+
+[node name="Wheel" type="CSGTorus3D" parent="."]
+transform = Transform3D(-0.0281704, -0.702863, 0, 0.991163, -0.0199765, 0, 0, 0, 1, 0, 0.941897, 0)
+inner_radius = 0.15
+outer_radius = 0.3
+sides = 16
+material = SubResource("StandardMaterial3D_t1q3g")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Wheel"]
+transform = Transform3D(0.992994, 1.86265e-09, 0, 7.45058e-09, 0.753492, 0, 0, 0, 1, 0.00634462, -0.00194545, -0.00718026)
+size = Vector3(0.2, 0.2, 0.2)
+material = SubResource("StandardMaterial3D_67cq3")
+
+[node name="Sprite3D" type="Sprite3D" parent="Wheel/CSGBox3D"]
+transform = Transform3D(-0.00017342, 0.999883, -0.0152936, -0.0113278, -0.0152946, -0.999819, -0.999936, -1.49012e-07, 0.0113292, 0.00562376, -0.146494, 0.0224458)
+texture_filter = 0
+texture = ExtResource("2_el3dv")
+
+[node name="Server" parent="." instance=ExtResource("3_p7hey")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-0.0380172, 0, 1.00749, 0, 1.00821, 0, -1.00749, 0, -0.0380172, 1.2363, 0.957688, 0)
+current = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_fqut8")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.458463, 0.888713, 0, -0.888713, 0.458463, 0, 4.34411, 0)
+
+[connection signal="rotation_changed" from="Server" to="." method="_on_server_rotation_changed"]
