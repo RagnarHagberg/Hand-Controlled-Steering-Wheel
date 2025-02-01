@@ -1,0 +1,61 @@
+[gd_scene load_steps=3 format=3 uid="uid://bdfn33pt12qda"]
+
+[ext_resource type="Script" path="res://Scenes/Car/car.gd" id="1_sre33"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6wikn"]
+size = Vector3(1, 1.93639, 3.62957)
+
+[node name="Car" type="VehicleBody3D"]
+script = ExtResource("1_sre33")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000735283, 0.130386, 0.0480196)
+size = Vector3(1, 0.719238, 2.99194)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.583444, -0.13755)
+size = Vector3(1, 0.869263, 1.2782)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.671578, 0.740934, 0, -0.740934, 0.671578, 0, 0.445294, -0.826251)
+size = Vector3(1, 0.654236, 0.886169)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0567093, 0.169743)
+shape = SubResource("BoxShape3D_6wikn")
+
+[node name="LFrontWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.650011, -0.366013, 1.29341)
+use_as_traction = true
+use_as_steering = true
+
+[node name="WheelModel" type="CSGCylinder3D" parent="LFrontWheel"]
+transform = Transform3D(-0.0339576, 0.999423, 0, -0.999423, -0.0339576, 0, 0, 0, 1, 0, 0, 0)
+height = 0.3
+
+[node name="RFrontWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.564039, -0.366013, 1.29341)
+use_as_traction = true
+use_as_steering = true
+
+[node name="WheelModel" type="CSGCylinder3D" parent="RFrontWheel"]
+transform = Transform3D(-0.0339576, 0.999423, 0, -0.999423, -0.0339576, 0, 0, 0, 1, 0, 0, 0)
+height = 0.3
+
+[node name="LBackWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.650011, -0.36642, -1.13727)
+use_as_traction = true
+
+[node name="WheelModel" type="CSGCylinder3D" parent="LBackWheel"]
+transform = Transform3D(-0.0339576, 0.999423, 0, -0.999423, -0.0339576, 0, 0, 0, 1, 0, 0, 0)
+height = 0.3
+
+[node name="RBackWheel" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.564039, -0.36642, -1.13727)
+use_as_traction = true
+
+[node name="WheelModel" type="CSGCylinder3D" parent="RBackWheel"]
+transform = Transform3D(-0.0339576, 0.999423, 0, -0.999423, -0.0339576, 0, 0, 0, 1, 0, 0, 0)
+height = 0.3

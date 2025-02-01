@@ -1,14 +1,12 @@
-[gd_scene load_steps=9 format=3 uid="uid://dtfg3dt33sfu8"]
+[gd_scene load_steps=12 format=3 uid="uid://dtfg3dt33sfu8"]
 
 [ext_resource type="Script" path="res://Scenes/Game/game.gd" id="1_43j5s"]
 [ext_resource type="Texture2D" uid="uid://l7yc31j7h5x2" path="res://Assets/WheelEmblem.png" id="2_el3dv"]
 [ext_resource type="PackedScene" uid="uid://bokunn06g5fvg" path="res://Scenes/Server/server.tscn" id="3_p7hey"]
+[ext_resource type="PackedScene" uid="uid://bdfn33pt12qda" path="res://Scenes/Car/car.tscn" id="4_rq82l"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_t1q3g"]
-albedo_color = Color(0, 0, 0, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_67cq3"]
-albedo_color = Color(0.47788, 0.47788, 0.47788, 1)
+[sub_resource type="BoxShape3D" id="BoxShape3D_wfquh"]
+size = Vector3(196, 0.393066, 231)
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_naqoy"]
 sky_top_color = Color(0, 0.675374, 0.990879, 1)
@@ -21,40 +19,85 @@ sky_material = SubResource("ProceduralSkyMaterial_naqoy")
 background_mode = 2
 sky = SubResource("Sky_s2hsy")
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_t1q3g"]
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_67cq3"]
+albedo_color = Color(0.47788, 0.47788, 0.47788, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vnsoo"]
+albedo_color = Color(0.909952, 0.187029, 0.155661, 1)
+
 [node name="Game" type="Node3D"]
 script = ExtResource("1_43j5s")
 
-[node name="Ground" type="CSGBox3D" parent="."]
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.377869, 0.00119746, 0.177573)
-size = Vector3(7.83118, 0.375488, 2.40039)
 
-[node name="Wheel" type="CSGTorus3D" parent="."]
-transform = Transform3D(-0.0281704, -0.702863, 0, 0.991163, -0.0199765, 0, 0, 0, 1, 0, 0.941897, 0)
-inner_radius = 0.15
-outer_radius = 0.3
-sides = 16
-material = SubResource("StandardMaterial3D_t1q3g")
+[node name="Ground" type="CSGBox3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.3145, 0, 47.6408)
+size = Vector3(195, 0.375, 233)
 
-[node name="CSGBox3D" type="CSGBox3D" parent="Wheel"]
-transform = Transform3D(0.992994, 1.86265e-09, 0, 7.45058e-09, 0.753492, 0, 0, 0, 1, 0.00634462, -0.00194545, -0.00718026)
-size = Vector3(0.2, 0.2, 0.2)
-material = SubResource("StandardMaterial3D_67cq3")
-
-[node name="Sprite3D" type="Sprite3D" parent="Wheel/CSGBox3D"]
-transform = Transform3D(-0.00017342, 0.999883, -0.0152936, -0.0113278, -0.0152946, -0.999819, -0.999936, -1.49012e-07, 0.0113292, 0.00562376, -0.146494, 0.0224458)
-texture_filter = 0
-texture = ExtResource("2_el3dv")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.8333, 0.00268554, 46.75)
+shape = SubResource("BoxShape3D_wfquh")
 
 [node name="Server" parent="." instance=ExtResource("3_p7hey")]
-
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(-0.0380172, 0, 1.00749, 0, 1.00821, 0, -1.00749, 0, -0.0380172, 1.2363, 0.957688, 0)
-current = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_fqut8")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.458463, 0.888713, 0, -0.888713, 0.458463, 0, 4.34411, 0)
+
+[node name="Car" parent="." instance=ExtResource("4_rq82l")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -2.77298, 2, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Car"]
+transform = Transform3D(-0.881394, 0, -0.472382, 0, 1, 0, 0.472382, 0, -0.881394, -2.80318, 0.829503, -4.00927)
+current = true
+
+[node name="Wheel" type="CSGTorus3D" parent="Car/Camera3D"]
+transform = Transform3D(1.89457e-15, 3.07355e-08, -1, 0.991563, -3.07355e-08, 0, -4.33426e-08, -0.703146, -4.37114e-08, 0.0527585, -0.00654769, -1.37439)
+inner_radius = 0.15
+outer_radius = 0.3
+sides = 16
+material = SubResource("StandardMaterial3D_t1q3g")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Car/Camera3D/Wheel"]
+transform = Transform3D(0.992994, 1.86265e-09, 0, 7.45058e-09, 0.753492, 0, 0, 0, 1, 0.00634462, -0.00194545, -0.00718026)
+size = Vector3(0.2, 0.2, 0.2)
+material = SubResource("StandardMaterial3D_67cq3")
+
+[node name="Sprite3D" type="Sprite3D" parent="Car/Camera3D/Wheel/CSGBox3D"]
+transform = Transform3D(-0.00017342, 0.999883, -0.0152936, -0.0113278, -0.0152946, -0.999819, -0.999936, -1.49012e-07, 0.0113292, 0.00562376, -0.146494, 0.0224458)
+texture_filter = 0
+texture = ExtResource("2_el3dv")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.497559, 3.93735, 6.05758)
+size = Vector3(37.8799, 3.45911, 1)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.02234, 6.31863, -14.5745)
+size = Vector3(16.1321, 8.22168, 1)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.02234, 6.31863, 35.499)
+size = Vector3(16.1321, 8.22168, 1)
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.0966, 5.10462, 162.457)
+size = Vector3(92.4966, 8.22168, 1)
+material = SubResource("StandardMaterial3D_vnsoo")
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="."]
+transform = Transform3D(-0.178562, 0, -0.983929, 0, 1, 0, 0.983929, 0, -0.178562, -114.728, 4.16414, 74.7118)
+size = Vector3(92.4966, 8.22168, 1)
+material = SubResource("StandardMaterial3D_vnsoo")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.9996, 5.19845, -2.72621)
+size = Vector3(1, 5.98132, 12.3391)
 
 [connection signal="rotation_changed" from="Server" to="." method="_on_server_rotation_changed"]

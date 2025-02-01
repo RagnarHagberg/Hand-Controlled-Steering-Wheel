@@ -5,5 +5,6 @@ var rotation_radians = 0
 
 func _on_server_rotation_changed(rotation_data) -> void:
 	rotation_radians = (rotation_data["rotation_angle"])
-	
-	get_node("Wheel").rotation.x = -(rotation_radians - 3.14/2)
+	var steering_wheel_rotation = -(rotation_radians - 3.14/2)
+	get_node("Car/Camera3D/Wheel").rotation.x = (steering_wheel_rotation)
+	get_node("Car").set_input_steering(steering_wheel_rotation/5)
