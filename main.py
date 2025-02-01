@@ -1,9 +1,13 @@
+import asyncio
+
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
 import time
 import GestureTracker
 import HandTracker
+import WebSocket
+
 
 GestureRecognizer = mp.tasks.vision.GestureRecognizer
 GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
@@ -26,9 +30,7 @@ def get_gesture_recognizer_result(result: GestureRecognizerResult, output_image:
             closed_fist = False
     else:
         closed_fist = False
-
-
-def main():
+async def hand_tracking(queue):
     global closed_fist, time_when_fist_closed
 
     ptime = 0
@@ -83,6 +85,11 @@ def main():
 
             detector.draw_steering_wheel(frame, closed_fist)
 
+            #steering_data = {"rotation_angle": detector.steering_wheel_angle if closed_fist else 0.0}  # Example data, can be more complex
+            steering_data = {"rotation_angle": detector.steering_wheel_angle}
+            print(f"Hand tracking data: {steering_data} from tracker")  # Debug print for hand tracking data
+            await queue.put(steering_data)
+
             # Flip Screen
             frame = cv2.flip(frame, 1)
 
@@ -95,6 +102,25 @@ def main():
             cv2.imshow('frame', frame)
             cv2.waitKey(1)
 
+            await asyncio.sleep(0.1)  # Yield control to the asyncio loop
+
+
+#change to multithread
+
+async def main():
+    queue = asyncio.Queue()
+
+    # Start WebSocket server
+    server_task = asyncio.create_task(WebSocket.start_server())
+
+    # Start hand tracking (sends data to queue)
+    hand_tracking_task = asyncio.create_task(hand_tracking(queue))
+
+    # Start sending steering data to clients
+    send_data_task = asyncio.create_task(WebSocket.send_steering_data(queue))
+
+    # Run all tasks
+    await asyncio.gather(server_task, hand_tracking_task, send_data_task)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

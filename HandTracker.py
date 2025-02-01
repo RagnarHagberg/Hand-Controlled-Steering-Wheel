@@ -1,9 +1,14 @@
+import asyncio
+import json
 import time
 
 import mediapipe as mp
 import math as math
 import cv2
 from math import dist
+
+import websockets
+
 
 class HandTracker:
     def __init__(self, mode=False, max_hands=2, detection_confidence=0.5, tracking_confidence=0.5):
@@ -35,6 +40,7 @@ class HandTracker:
         self.last_seen_hand_time = 0
         self.hand_timeout = 2.0
 
+    #Change
     def process_frame(self, frame, draw=True):
         '''
         Detects hands and landmarks in a frame.
@@ -129,7 +135,6 @@ class HandTracker:
                 dif = min(0.5,self.previous_hand_angle - angle_to_center)
                 dif = max(-0.5, dif)
 
-                print(dif)
                 self.steering_wheel_angle -= dif
 
             self.previous_hand_angle = angle_to_center
