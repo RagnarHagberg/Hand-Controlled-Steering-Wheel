@@ -1,0 +1,63 @@
+[gd_scene load_steps=6 format=3 uid="uid://rsm5jryo6nxd"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lx24n"]
+albedo_color = Color(1, 1, 0, 1)
+
+[sub_resource type="Animation" id="Animation_6ktr3"]
+resource_name = "Spin"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CSGCylinder3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(1.5708, 0, 0), Vector3(1.5708, 3.14159, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_63nbs"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CSGCylinder3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1.5708, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wd0uf"]
+_data = {
+"RESET": SubResource("Animation_63nbs"),
+"Spin": SubResource("Animation_6ktr3")
+}
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wor17"]
+size = Vector3(2.83276, 1, 1.98889)
+
+[node name="Coin" type="Node3D" groups=["Coin"]]
+
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+height = 0.1
+material = SubResource("StandardMaterial3D_lx24n")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wd0uf")
+}
+autoplay = "Spin"
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0252686, 0, -0.0221558)
+shape = SubResource("BoxShape3D_wor17")
